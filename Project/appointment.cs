@@ -15,35 +15,35 @@ public class appointment{
     hospitalName=hospital;
   }  
 
-  public get_date(){
+  public string get_date(){
     return date;
   }
-  public get_time(){
+  public string get_time(){
     return time;
   }
-  public get_account(){
+  public int get_account(){
     return accountNum;
   }
-  public get_patient(){
+  public string get_patient(){
     return patientName;
   }
-  public get_doctor(){
+  public string get_doctor(){
     return doctorName;
   }
-  public get_hospital(){
+  public string get_hospital(){
     return hospitalName;
   }
 
-  public set_date(string d){
+  public void set_date(string d){
     date=d;
   }
-  public set_time(string t){
+  public void set_time(string t){
     time=t;
   }
-  public set_doctor(string doctor){
+  public void set_doctor(string doctor){
     doctorName=doctor;
   }
-  public set_hospital(string hospital){
+  public void set_hospital(string hospital){
     hospitalName=hospital;    
   }
 
