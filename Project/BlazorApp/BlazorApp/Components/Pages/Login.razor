@@ -1,0 +1,56 @@
+
+
+@page "/login"
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using System.Security.Claims
+@inject IHttpContextAccessor HttpContextAccessor
+
+<h3>Login</h3>
+
+<input @bind="Username" placeholder="Username" />
+<br />
+<input @bind="Password" type="password" placeholder="Password" />
+<br />
+<button @onclick="LoginUser">Login</button>
+
+<button @onclick="LogoutUser">Logout</button>
+
+@code {
+    private string Username;
+    private string Password;
+
+    private async Task LoginUser()
+    {
+        if (Username == "admin" && Password == "password") // Your login logic here
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, Username)
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            // Sign in the user with cookie authentication
+            await HttpContextAccessor.HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme, 
+                principal);
+
+            // Navigate to the home page after login
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            // Handle invalid login attempt (e.g., show an error message)
+        }
+    }
+
+    private async Task LogoutUser()
+    {
+        // Sign the user out and redirect to login page
+        await HttpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        NavigationManager.NavigateTo("/login");
+    }
+}
