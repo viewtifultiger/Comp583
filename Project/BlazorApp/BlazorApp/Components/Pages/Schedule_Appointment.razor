@@ -5,24 +5,67 @@
 
 <PageTitle>Schedule Appointment</PageTitle>
 
-<h1>Schedule Appoinntment</h1>
+<h1>Schedule Appointment</h1>
 
-
-<input @bind="name" placeholder="name" />
+<input @bind="name" placeholder="Name" />
 <br />
-<select @bind="hospital">
+
+<!-- Hospital Dropdown -->
+<select value="hospital" @onchange="OnHospitalChanged">
+    <option value="">Select Hospital</option>
     @foreach (var h in hospitals)
     {
         <option value="@h">@h</option>
     }
 </select>
-<input @bind="doctorName" placeholder="doctor" />
-<input @bind="date" placeholder="date" />
-<input @bind="time" placeholder="time" />
+
+<br />
+
+<!-- Doctor Dropdown, dependent on selected hospital -->
+<select value="doctorName" @onchange="OnDoctorChanged">
+    <option value="">Select Doctor</option>
+    @foreach (var doctor in filteredDoctors)
+    {
+        <option value="@doctor">@doctor</option>
+    }
+</select>
+
+<br />
+
+<!-- Date Dropdown, dependent on selected doctor -->
+<select value="date" @onchange="OnDateChanged">
+    <option value="">Select Date</option>
+    @foreach (var availableDate in filteredDates)
+    {
+        <option value="@availableDate">@availableDate</option>
+    }
+</select>
+
+<br />
+
+<!-- Time Dropdown, dependent on selected date -->
+<select @bind="time">
+    <option value="">Select Time</option>
+    @foreach (var availableTime in filteredTimes)
+    {
+        <option value="@availableTime">@availableTime</option>
+    }
+</select>
+<br />
+
+<button @onclick="ScheduleAppointment" disabled="@(!IsFormValid)">
+    Schedule Appointment
+</button>
+
+
 
 @code {
-    private String name = "";
-    private String hospital="";
+    private string name = "";
+    private string hospital = "";
+    private string doctorName = "";
+    private string date = "";
+    private string time = "";
+
     private List<string> hospitals = new List<string>
     {
         "Henry Mayo",
@@ -30,13 +73,94 @@
         "UCLA Health",
         "Kaiser Permanente",
     };
-    private String doctorName="";
-    private String date="";
-    private String time="";
-    
 
-    private void IncrementCount()
+    // Example data for doctors, dates, and times for each hospital
+    private Dictionary<string, List<string>> doctorsByHospital = new Dictionary<string, List<string>>
     {
-        
+        { "Henry Mayo", new List<string> { "Dr. Smith", "Dr. Johnson" } },
+        { "Providence", new List<string> { "Dr. Brown", "Dr. Lee" } },
+        { "UCLA Health", new List<string> { "Dr. Davis", "Dr. Miller" } },
+        { "Kaiser Permanente", new List<string> { "Dr. Wilson", "Dr. Moore" } },
+    };
+
+    private Dictionary<string, List<string>> availableDatesByDoctor = new Dictionary<string, List<string>>
+    {
+        { "Dr. Smith", new List<string> { "2025-05-01", "2025-05-02" } },
+        { "Dr. Johnson", new List<string> { "2025-05-03", "2025-05-04" } },
+        { "Dr. Brown", new List<string> { "2025-05-05", "2025-05-06" } },
+        { "Dr. Lee", new List<string> { "2025-05-07", "2025-05-08" } },
+        { "Dr. Davis", new List<string> { "2025-05-09", "2025-05-10" } },
+        { "Dr. Miller", new List<string> { "2025-05-11", "2025-05-12" } },
+        { "Dr. Wilson", new List<string> { "2025-05-13", "2025-05-14" } },
+        { "Dr. Moore", new List<string> { "2025-05-15", "2025-05-16" } },
+    };
+
+    private Dictionary<string, List<string>> availableTimesByDate = new Dictionary<string, List<string>>
+    {
+        { "2025-05-01", new List<string> { "10:00 AM", "11:00 AM" } },
+        { "2025-05-02", new List<string> { "12:00 PM", "1:00 PM" } },
+        { "2025-05-03", new List<string> { "9:00 AM", "2:00 PM" } },
+        { "2025-05-04", new List<string> { "3:00 PM", "4:00 PM" } },
+        { "2025-05-05", new List<string> { "10:00 AM", "11:00 AM" } },
+        { "2025-05-06", new List<string> { "12:00 PM", "1:00 PM" } },
+        { "2025-05-07", new List<string> { "9:00 AM", "2:00 PM" } },
+        { "2025-05-08", new List<string> { "3:00 PM", "4:00 PM" } },
+        { "2025-05-09", new List<string> { "10:00 AM", "11:00 AM" } },
+        { "2025-05-10", new List<string> { "12:00 PM", "1:00 PM" } },
+        { "2025-05-11", new List<string> { "9:00 AM", "2:00 PM" } },
+        { "2025-05-12", new List<string> { "3:00 PM", "4:00 PM" } },
+        { "2025-05-13", new List<string> { "10:00 AM", "11:00 AM" } },
+        { "2025-05-14", new List<string> { "12:00 PM", "1:00 PM" } },
+        { "2025-05-15", new List<string> { "9:00 AM", "2:00 PM" } },
+        { "2025-05-16", new List<string> { "3:00 PM", "4:00 PM" } },
+        // Add similar entries for other dates
+    };
+
+    // Filtered data for dependent dropdowns
+    private List<string> filteredDoctors = new List<string>();
+    private List<string> filteredDates = new List<string>();
+    private List<string> filteredTimes = new List<string>();
+
+    // Handle hospital change
+    private void OnHospitalChanged(ChangeEventArgs e)
+    {
+        hospital = e.Value.ToString();
+        // Update doctors based on selected hospital
+        filteredDoctors = string.IsNullOrEmpty(hospital) ? new List<string>() : doctorsByHospital.GetValueOrDefault(hospital, new List<string>());
+        doctorName = ""; // Reset doctor selection
+        filteredDates.Clear(); // Reset dates
+        filteredTimes.Clear(); // Reset times
     }
+
+    // Handle doctor change
+    private void OnDoctorChanged(ChangeEventArgs e)
+    {
+        doctorName = e.Value.ToString();
+        // Update available dates based on selected doctor
+        filteredDates = string.IsNullOrEmpty(doctorName) ? new List<string>() : availableDatesByDoctor.GetValueOrDefault(doctorName, new List<string>());
+        date = ""; // Reset date selection
+        filteredTimes.Clear(); // Reset times
+    }
+
+    // Handle date change
+    private void OnDateChanged(ChangeEventArgs e)
+    {
+        date = e.Value.ToString();
+        // Update available times based on selected date
+        filteredTimes = string.IsNullOrEmpty(date) ? new List<string>() : availableTimesByDate.GetValueOrDefault(date, new List<string>());
+    }
+    private bool IsFormValid =>
+    !string.IsNullOrWhiteSpace(name) &&
+    !string.IsNullOrWhiteSpace(hospital) &&
+    !string.IsNullOrWhiteSpace(doctorName) &&
+    !string.IsNullOrWhiteSpace(date) &&
+    !string.IsNullOrWhiteSpace(time);
+
+private void ScheduleAppointment()
+{
+    // Your logic for scheduling the appointment goes here
+    Console.WriteLine($"Appointment scheduled for {name} at {hospital} with {doctorName} on {date} at {time}.");
+    NavigationManager.NavigateTo("/");
+}
+
 }
