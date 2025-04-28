@@ -2,6 +2,7 @@
 
 @page "/login"
 @inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authentication.Cookies
 @using System.Security.Claims
@@ -39,7 +40,7 @@
                 principal);
 
             // Navigate to the home page after login
-            NavigationManager.NavigateTo("/");
+            NavigationManager.NavigateTo("/Home");
         }
         else
         {
