@@ -1,4 +1,5 @@
 using BlazorApp.Components;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 
@@ -18,6 +19,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/login";  // Path to redirect if the user is not authenticated
         options.LogoutPath = "/login"; // Path to redirect after logging out
     });
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add CustomAuthStateProvider to manage authentication state
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();

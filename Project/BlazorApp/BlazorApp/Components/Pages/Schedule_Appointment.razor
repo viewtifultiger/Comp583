@@ -1,0 +1,42 @@
+﻿@page "/Schedule Appointment"
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+@inject ApplicationDbContext Db
+
+<PageTitle>Schedule Appointment</PageTitle>
+
+<h1>Schedule Appoinntment</h1>
+
+
+<input @bind="name" placeholder="name" />
+<br />
+<select @bind="hospital">
+    @foreach (var h in hospitals)
+    {
+        <option value="@h">@h</option>
+    }
+</select>
+<input @bind="doctorName" placeholder="doctor" />
+<input @bind="date" placeholder="date" />
+<input @bind="time" placeholder="time" />
+
+@code {
+    private String name = "";
+    private String hospital="";
+    private List<string> hospitals = new List<string>
+    {
+        "Henry Mayo",
+        "Providence",
+        "UCLA Health",
+        "Kaiser Permanente",
+    };
+    private String doctorName="";
+    private String date="";
+    private String time="";
+    
+
+    private void IncrementCount()
+    {
+        
+    }
+}
