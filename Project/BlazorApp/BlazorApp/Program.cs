@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSingleton<AppointmentService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -28,6 +30,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
+
 
 // Use authentication and authorization middleware
 app.UseAuthentication();

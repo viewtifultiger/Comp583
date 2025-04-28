@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 @inject ApplicationDbContext Db
+@inject AppointmentService AppointmentService
 
 <PageTitle>Schedule Appointment</PageTitle>
 
@@ -158,9 +159,20 @@
 
 private void ScheduleAppointment()
 {
-    // Your logic for scheduling the appointment goes here
-    Console.WriteLine($"Appointment scheduled for {name} at {hospital} with {doctorName} on {date} at {time}.");
-    NavigationManager.NavigateTo("/");
+    var newAppointment = new Appointment
+    {
+        Name = name,
+        Hospital = hospital,
+        DoctorName = doctorName,
+        Date = date,
+        Time = time
+    };
+
+    AppointmentService.AddAppointment(newAppointment);
+
+    // Optional: Redirect to the Appointments page
+    NavigationManager.NavigateTo("/Appointments");
 }
+
 
 }

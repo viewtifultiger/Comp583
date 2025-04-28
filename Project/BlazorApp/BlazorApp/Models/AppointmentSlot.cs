@@ -1,9 +1,9 @@
-public class AppointmentSlot
-{
-    public int Id { get; set; }
-    public int DoctorId { get; set; }
-    public Doctor Doctor { get; set; }
-    public DateTime Date { get; set; }
-    public TimeOnly Time { get; set; }
+    public class Appointment
+    {
+        public string Name { get; set; } = "";
+        public string Hospital { get; set; } = "";
+        public string DoctorName { get; set; } = "";
+        public string Date { get; set; } = "";
+        public string Time { get; set; } = "";
+    }
 
-}

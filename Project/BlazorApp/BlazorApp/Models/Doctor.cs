@@ -4,5 +4,6 @@ public class Doctor
     public string Name { get; set; }
     public int HospitalId { get; set; }
     public Hospital Hospital { get; set; }
-    public List<AppointmentSlot> AppointmentSlots { get; set; }
+    //public List<AppointmentSlot> AppointmentSlots { get; set; }
+
 }

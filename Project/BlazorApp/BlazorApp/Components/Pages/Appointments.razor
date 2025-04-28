@@ -1,0 +1,38 @@
+﻿@page "/Appointments"
+@attribute [StreamRendering]
+@inject AppointmentService AppointmentService
+
+<PageTitle>Appointments</PageTitle>
+
+<h1>Appointments</h1>
+
+@if (AppointmentService.Appointments.Count == 0)
+{
+    <p><em>No appointments yet...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Hospital</th>
+                <th>Doctor</th>
+                <th>Date</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var appointment in AppointmentService.Appointments)
+            {
+                <tr>
+                    <td>@appointment.Name</td>
+                    <td>@appointment.Hospital</td>
+                    <td>@appointment.DoctorName</td>
+                    <td>@appointment.Date</td>
+                    <td>@appointment.Time</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
