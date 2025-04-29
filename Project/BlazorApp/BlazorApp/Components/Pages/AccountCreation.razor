@@ -1,0 +1,62 @@
+@page "/AccountCreation"
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using System.Security.Claims
+@inject IHttpContextAccessor HttpContextAccessor
+
+<h3>Create your account</h3>
+
+
+<input @bind="FirstName" placeholder="First Name" />
+<br />
+<input @bind="LastName"  placeholder="Last Name" />
+<br />
+<input @bind="age"  type="number"  placeholder="0" />
+<br />
+<input @bind="email"  placeholder="email" />
+<br />
+<input @bind="password" type="password" placeholder="Password" />
+<br />
+
+<select value="type" @onchange="OnTypeChanged">
+    <option value="">Select Account Type</option>
+    @foreach (var t in types)
+    {
+        <option value="@t">@t</option>
+    }
+</select>
+
+
+@code{
+    private String FirstName="";
+    private String LastName="";
+    private int age=0;
+    private String email="";
+    private String password="";
+    private String type="";
+    private String hospital="";
+    private String[] availableTimes;
+
+    private List<string> types = new List<string>
+    {
+        "Patient",
+        "Doctor",
+        "Admin"
+    };
+
+    private void OnTypeChanged(ChangeEventArgs e)
+    {
+        type = e.Value.ToString();
+        // Update doctors based on selected hospital
+       // filteredDoctors = string.IsNullOrEmpty(hospital) ? new List<string>() : doctorsByHospital.GetValueOrDefault(hospital, new List<string>());
+        //doctorName = ""; // Reset doctor selection
+        //filteredDates.Clear(); // Reset dates
+        //filteredTimes.Clear(); // Reset times
+    }
+
+
+
+
+}

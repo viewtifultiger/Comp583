@@ -1,6 +1,4 @@
-
-
-@page "/login"
+@page "/"
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authentication
@@ -16,7 +14,7 @@
 <br />
 <button @onclick="LoginUser">Login</button>
 
-<button @onclick="LogoutUser">Logout</button>
+<button @onclick="Create_Account">Create Account</button>
 
 @code {
     private string Username;
@@ -48,10 +46,10 @@
         }
     }
 
-    private async Task LogoutUser()
+    private async Task Create_Account()
     {
         // Sign the user out and redirect to login page
-        await HttpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        NavigationManager.NavigateTo("/login");
+        //await HttpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        NavigationManager.NavigateTo("/AccountCreation");
     }
 }
