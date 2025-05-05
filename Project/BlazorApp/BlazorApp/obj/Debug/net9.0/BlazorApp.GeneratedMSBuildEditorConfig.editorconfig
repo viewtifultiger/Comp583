@@ -32,6 +32,10 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Michael/Documents/GitHub/Comp583/Project/BlazorApp/BlazorApp/Components/Pages/AccountCreation.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBY2NvdW50Q3JlYXRpb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Michael/Documents/GitHub/Comp583/Project/BlazorApp/BlazorApp/Components/Pages/Appointments.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBcHBvaW50bWVudHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 

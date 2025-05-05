@@ -26,11 +26,11 @@ else
             @foreach (var appointment in AppointmentService.Appointments)
             {
                 <tr>
-                    <td>@appointment.Name</td>
-                    <td>@appointment.Hospital</td>
-                    <td>@appointment.DoctorName</td>
-                    <td>@appointment.Date</td>
-                    <td>@appointment.Time</td>
+                    <td>@appointment.Patient.FirstName</td>
+                    <td>@appointment.Hospital.Name</td>
+                    <td>@($"{appointment.Doctor.FirstName} {appointment.Doctor.LastName}")</td>
+                    <td>@appointment.Date.ToShortDateString()</td>
+                    <td>@appointment.Date.ToShortTimeString()</td> <!-- You had no Time property -->
                 </tr>
             }
         </tbody>

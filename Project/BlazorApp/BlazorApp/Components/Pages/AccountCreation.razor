@@ -1,0 +1,57 @@
+@page "/AccountCreation"
+@inject NavigationManager NavigationManager
+@inject AppDbContext DbContext
+@inject IHttpContextAccessor HttpContextAccessor
+@using BlazorApp.Models
+@using Microsoft.EntityFrameworkCore
+
+
+@rendermode InteractiveServer
+
+<h3>Create your account</h3>
+
+<input @bind="FirstName" placeholder="First Name" />
+<br />
+<input @bind="LastName" placeholder="Last Name" />
+<br />
+<input @bind="age" type="number" placeholder="0" />
+<br />
+<input @bind="email" placeholder="Email" />
+<br />
+<input @bind="password" type="password" placeholder="Password" />
+<br />
+
+<select @bind="type">
+    <option value="">Select Account Type</option>
+    @foreach (var t in types)
+    {
+        <option value="@t">@t</option>
+    }
+</select>
+<br />
+
+<select @bind="SelectedHospitalId">
+    <option value="">Select Hospital</option>
+    @foreach (var h in Hospitals)
+    {
+        <option value="@h.Id">@h.Name</option>
+    }
+</select>
+
+@code {
+    private string FirstName = "";
+    private string LastName = "";
+    private int age = 0;
+    private string email = "";
+    private string password = "";
+    private string type = "";
+    private int? SelectedHospitalId = null;
+
+    private List<string> types = new() { "Patient", "Doctor", "Admin" };
+    private List<Hospital> Hospitals = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Hospitals = await DbContext.Hospitals.ToListAsync();
+    }
+}

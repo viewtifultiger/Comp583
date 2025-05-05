@@ -1,9 +1,18 @@
-public class Doctor
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public int HospitalId { get; set; }
-    public Hospital Hospital { get; set; }
-    //public List<AppointmentSlot> AppointmentSlots { get; set; }
+using BlazorApp.Models;
 
+namespace BlazorApp.Models
+{
+    public class Doctor
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public int Age { get; set; }
+        public int HospitalId { get; set; }
+        public Hospital Hospital { get; set; }
+        public List<Appointment> Appointments { get; set; } = new List<Appointment>();  // Initialized
+        public List<Time> Times { get; set; } = new List<Time>();  // Initialized
+    }
 }

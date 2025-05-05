@@ -1,3 +1,5 @@
+using BlazorApp.Models;
+
 public class AppointmentService
 {
     private readonly List<Appointment> _appointments = new();
