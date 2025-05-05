@@ -1,62 +1,57 @@
 @page "/AccountCreation"
 @inject NavigationManager NavigationManager
-@rendermode InteractiveServer
-@using Microsoft.AspNetCore.Authentication
-@using Microsoft.AspNetCore.Authentication.Cookies
-@using System.Security.Claims
+@inject AppDbContext DbContext
 @inject IHttpContextAccessor HttpContextAccessor
+@using BlazorApp.Models
+@using Microsoft.EntityFrameworkCore
+
+
+@rendermode InteractiveServer
 
 <h3>Create your account</h3>
 
-
 <input @bind="FirstName" placeholder="First Name" />
 <br />
-<input @bind="LastName"  placeholder="Last Name" />
+<input @bind="LastName" placeholder="Last Name" />
 <br />
-<input @bind="age"  type="number"  placeholder="0" />
+<input @bind="age" type="number" placeholder="0" />
 <br />
-<input @bind="email"  placeholder="email" />
+<input @bind="email" placeholder="Email" />
 <br />
 <input @bind="password" type="password" placeholder="Password" />
 <br />
 
-<select value="type" @onchange="OnTypeChanged">
+<select @bind="type">
     <option value="">Select Account Type</option>
     @foreach (var t in types)
     {
         <option value="@t">@t</option>
     }
 </select>
+<br />
 
-
-@code{
-    private String FirstName="";
-    private String LastName="";
-    private int age=0;
-    private String email="";
-    private String password="";
-    private String type="";
-    private String hospital="";
-    private String[] availableTimes;
-
-    private List<string> types = new List<string>
+<select @bind="SelectedHospitalId">
+    <option value="">Select Hospital</option>
+    @foreach (var h in Hospitals)
     {
-        "Patient",
-        "Doctor",
-        "Admin"
-    };
-
-    private void OnTypeChanged(ChangeEventArgs e)
-    {
-        type = e.Value.ToString();
-        // Update doctors based on selected hospital
-       // filteredDoctors = string.IsNullOrEmpty(hospital) ? new List<string>() : doctorsByHospital.GetValueOrDefault(hospital, new List<string>());
-        //doctorName = ""; // Reset doctor selection
-        //filteredDates.Clear(); // Reset dates
-        //filteredTimes.Clear(); // Reset times
+        <option value="@h.Id">@h.Name</option>
     }
+</select>
 
+@code {
+    private string FirstName = "";
+    private string LastName = "";
+    private int age = 0;
+    private string email = "";
+    private string password = "";
+    private string type = "";
+    private int? SelectedHospitalId = null;
 
+    private List<string> types = new() { "Patient", "Doctor", "Admin" };
+    private List<Hospital> Hospitals = new();
 
-
+    protected override async Task OnInitializedAsync()
+    {
+        Hospitals = await DbContext.Hospitals.ToListAsync();
+    }
 }
