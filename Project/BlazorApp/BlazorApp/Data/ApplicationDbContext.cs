@@ -12,7 +12,6 @@ public class AppDbContext : DbContext
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<Time> Times { get; set; }
 
-    // 👇 Add this method to configure the relationships
     protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     base.OnModelCreating(modelBuilder);
