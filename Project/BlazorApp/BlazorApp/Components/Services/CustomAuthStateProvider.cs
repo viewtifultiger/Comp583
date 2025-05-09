@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 public class CustomAuthStateProvider : AuthenticationStateProvider
 {
@@ -13,12 +12,31 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        // Get the user's claims from the current HTTP context (cookie-based)
-        var user = _httpContextAccessor.HttpContext.User;
-
-        // Return the authentication state
-        var authenticationState = new AuthenticationState(user);
-        return Task.FromResult(authenticationState);
+        var user = _httpContextAccessor.HttpContext?.User ?? new ClaimsPrincipal(new ClaimsIdentity());
+        return Task.FromResult(new AuthenticationState(user));
     }
-    
+
+    // This method will trigger a state change when the user logs in or logs out.
+    public void MarkUserAsAuthenticated(string username)
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, username),
+            new Claim(ClaimTypes.Role, "User") // or customize with the role
+        };
+        var identity = new ClaimsIdentity(claims, "apiauth");
+        var user = new ClaimsPrincipal(identity);
+        var authenticationState = new AuthenticationState(user);
+
+        NotifyAuthenticationStateChanged(Task.FromResult(authenticationState));
+    }
+
+    public void MarkUserAsLoggedOut()
+    {
+        var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
+        var authenticationState = new AuthenticationState(anonymous);
+
+        NotifyAuthenticationStateChanged(Task.FromResult(authenticationState));
+    }
 }
+

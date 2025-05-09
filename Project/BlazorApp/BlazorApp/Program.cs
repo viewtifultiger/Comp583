@@ -3,136 +3,238 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using BlazorApp.Models;
+using BCrypt.Net;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<AppointmentService>();
+builder.Services.AddRazorPages();
+builder.Services.AddHttpClient();
 
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
-
-// Add authentication and authorization services
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddAuthorizationCore();
 
-// Register authentication with cookie authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/login";  // Path to redirect if the user is not authenticated
-        options.LogoutPath = "/login"; // Path to redirect after logging out
+        options.LoginPath = "/Login";
+        options.LogoutPath = "/Login";
     });
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add CustomAuthStateProvider to manage authentication state
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
-
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
+
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    // Ensure the database is created
     context.Database.Migrate();
 
-    // Declare hospital variables outside of the if-else block
-    Hospital hospital = null;
-    Hospital hospital2 = null;
-    Hospital hospital3 = null;
-    Hospital hospital4 = null;
+    // Hospitals
+    Hospital hospital = context.Hospitals.FirstOrDefault(h => h.Name == "Henry Mayo") ?? new Hospital { Name = "Henry Mayo" };
+    Hospital hospital2 = context.Hospitals.FirstOrDefault(h => h.Name == "Providence") ?? new Hospital { Name = "Providence" };
+    Hospital hospital3 = context.Hospitals.FirstOrDefault(h => h.Name == "UCLA Health") ?? new Hospital { Name = "UCLA Health" };
+    Hospital hospital4 = context.Hospitals.FirstOrDefault(h => h.Name == "Kaiser Permanente") ?? new Hospital { Name = "Kaiser Permanente" };
 
-    // Seed hospitals
-    // Only seed if there are no hospitals yet
-    if (!context.Hospitals.Any())
+    if (hospital.Id == 0 || hospital2.Id == 0 || hospital3.Id == 0 || hospital4.Id == 0)
     {
-        hospital = new Hospital { Name = "Henry Mayo" };
-        hospital2 = new Hospital { Name = "Providence" };
-        hospital3 = new Hospital { Name = "UCLA Health" };
-        hospital4 = new Hospital { Name = "Kaiser Permanente" };
-
-        context.Hospitals.AddRange(hospital, hospital2, hospital3, hospital4);
+        context.Hospitals.AddRange(
+            hospital.Id == 0 ? hospital : null,
+            hospital2.Id == 0 ? hospital2 : null,
+            hospital3.Id == 0 ? hospital3 : null,
+            hospital4.Id == 0 ? hospital4 : null
+        );
         context.SaveChanges();
     }
-    else
+
+    // Admins
+    if (!context.Admins.Any(a => a.Email == "alice@example.com"))
     {
-        // Load existing hospitals from DB
-        hospital = context.Hospitals.FirstOrDefault(h => h.Name == "Henry Mayo");
-        hospital2 = context.Hospitals.FirstOrDefault(h => h.Name == "Providence");
-        hospital3 = context.Hospitals.FirstOrDefault(h => h.Name == "UCLA Health");
-        hospital4 = context.Hospitals.FirstOrDefault(h => h.Name == "Kaiser Permanente");
+        context.Admins.Add(new Admin
+        {
+            FirstName = "Alice",
+            LastName = "Smith",
+            Email = "alice@example.com",
+            Password = "password",
+            Age = 35,
+            HospitalId = hospital.Id
+        });
     }
 
-    // Ensure hospitals were loaded or created correctly
-    if (hospital == null || hospital2 == null || hospital3 == null || hospital4 == null)
+    if (!context.Admins.Any(a => a.Email == "john@example.com"))
     {
-        throw new Exception("One or more hospitals not found or created.");
+        context.Admins.Add(new Admin
+        {
+            FirstName = "John",
+            LastName = "Doe",
+            Email = "john@example.com",
+            Password = "password",
+            Age = 43,
+            HospitalId = hospital2.Id
+        });
     }
 
-    // Seed admins, doctors, and patients...
-    var admin = new Admin
+    if (!context.Admins.Any(a => a.Email == "jane@example.com"))
     {
-        FirstName = "Alice",
-        LastName = "Smith",
-        Email = "alice@example.com",
-        Password = "password",
-        Age = 35,
-        HospitalId = hospital.Id
-    };
-    context.Admins.Add(admin);
-    var admin2 = new Admin
-    {
-        FirstName = "John",
-        LastName = "Doe",
-        Email = "john@example.com",
-        Password = "password",
-        Age = 43,
-        HospitalId = hospital2.Id
-    };
-    context.Admins.Add(admin2);
-    var admin3 = new Admin
-    {
-        FirstName = "Jane",
-        LastName = "Doe",
-        Email = "jane@example.com",
-        Password = "password",
-        Age = 25,
-        HospitalId = hospital3.Id
-    };
-    context.Admins.Add(admin3);
-    var admin4 = new Admin
-    {
-        FirstName = "Ronald",
-        LastName = "Donald",
-        Email = "Ronald@example.com",
-        Password = "password",
-        Age = 50,
-        HospitalId = hospital4.Id
-    };
-    context.Admins.Add(admin4);
+        context.Admins.Add(new Admin
+        {
+            FirstName = "Jane",
+            LastName = "Doe",
+            Email = "jane@example.com",
+            Password = "password",
+            Age = 25,
+            HospitalId = hospital3.Id
+        });
+    }
 
-    // Seed doctors and patients similarly...
+    if (!context.Admins.Any(a => a.Email == "ronald@example.com"))
+    {
+        context.Admins.Add(new Admin
+        {
+            FirstName = "Ronald",
+            LastName = "Donald",
+            Email = "ronald@example.com",
+            Password = "password",
+            Age = 50,
+            HospitalId = hospital4.Id
+        });
+    }
+
+    // Doctors
+    if (!context.Doctors.Any(d => d.Email == "harold@example.com"))
+    {
+        context.Doctors.Add(new Doctor
+        {
+            FirstName = "Harold",
+            LastName = "John",
+            Email = "harold@example.com",
+            Password = "password",
+            Age = 28,
+            HospitalId = hospital.Id
+        });
+    }
+
+    if (!context.Doctors.Any(d => d.Email == "alex@example.com"))
+    {
+        context.Doctors.Add(new Doctor
+        {
+            FirstName = "Alex",
+            LastName = "Jones",
+            Email = "alex@example.com",
+            Password = "password",
+            Age = 30,
+            HospitalId = hospital2.Id
+        });
+    }
+
+    if (!context.Doctors.Any(d => d.Email == "joe@example.com"))
+    {
+        context.Doctors.Add(new Doctor
+        {
+            FirstName = "Joe",
+            LastName = "Jones",
+            Email = "joe@example.com",
+            Password = "password",
+            Age = 45,
+            HospitalId = hospital3.Id
+        });
+    }
+
+    if (!context.Doctors.Any(d => d.Email == "johnny@example.com"))
+    {
+        context.Doctors.Add(new Doctor
+        {
+            FirstName = "Johnny",
+            LastName = "Guitar",
+            Email = "johnny@example.com",
+            Password = "password",
+            Age = 32,
+            HospitalId = hospital4.Id
+        });
+    }
+
+    // Patients
+    if (!context.Patients.Any(p => p.Email == "jay@example.com"))
+    {
+        context.Patients.Add(new Patient
+        {
+            FirstName = "Jay",
+            LastName = "Jackson",
+            Email = "jay@example.com",
+            Password = "password",
+            Age = 28,
+            HospitalId = hospital.Id
+        });
+    }
+
+    if (!context.Patients.Any(p => p.Email == "steve@example.com"))
+    {
+        context.Patients.Add(new Patient
+        {
+            FirstName = "Steve",
+            LastName = "Hoover",
+            Email = "steve@example.com",
+            Password = "password",
+            Age = 27,
+            HospitalId = hospital2.Id
+        });
+    }
+
+    if (!context.Patients.Any(p => p.Email == "jenny@example.com"))
+    {
+        context.Patients.Add(new Patient
+        {
+            FirstName = "Jenny",
+            LastName = "Mcgee",
+            Email = "jenny@example.com",
+            Password = "password",
+            Age = 33,
+            HospitalId = hospital3.Id
+        });
+    }
+
+    if (!context.Patients.Any(p => p.Email == "jake@example.com"))
+    {
+        context.Patients.Add(new Patient
+        {
+            FirstName = "Jake",
+            LastName = "Sanders",
+            Email = "jake@example.com",
+            Password = "password",
+            Age = 38,
+            HospitalId = hospital4.Id
+        });
+    }
 
     context.SaveChanges();
 }
 
-// Use authentication and authorization middleware
+// Middleware setup
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
+else
+{
+    app.UseDeveloperExceptionPage();
+}
 
 app.UseHttpsRedirection();
 app.UseAntiforgery();
 
+app.MapRazorPages();
 app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapGet("/", () => Results.Redirect("/Login"));
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.Run();
+

@@ -11,6 +11,6 @@ public class Patient
     public int Age { get; set; }
     public int HospitalId { get; set; }
     public Hospital Hospital { get; set; }
-    public List<Appointment> Appointments { get; set; } = new List<Appointment>();  // Initialized
+    public List<Appointment> Appointments { get; set; } = new List<Appointment>();  
 }
 }
