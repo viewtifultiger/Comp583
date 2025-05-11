@@ -9,14 +9,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<AppointmentService>();
 builder.Services.AddRazorPages();
-builder.Services.AddHttpClient();
-
-builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddHttpClient(); 
 builder.Services.AddAuthorizationCore();
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
+        options.Cookie.Name = "auth_token";
         options.LoginPath = "/Login";
         options.LogoutPath = "/Login";
     });
@@ -29,189 +30,6 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    context.Database.Migrate();
-
-    // Hospitals
-    Hospital hospital = context.Hospitals.FirstOrDefault(h => h.Name == "Henry Mayo") ?? new Hospital { Name = "Henry Mayo" };
-    Hospital hospital2 = context.Hospitals.FirstOrDefault(h => h.Name == "Providence") ?? new Hospital { Name = "Providence" };
-    Hospital hospital3 = context.Hospitals.FirstOrDefault(h => h.Name == "UCLA Health") ?? new Hospital { Name = "UCLA Health" };
-    Hospital hospital4 = context.Hospitals.FirstOrDefault(h => h.Name == "Kaiser Permanente") ?? new Hospital { Name = "Kaiser Permanente" };
-
-    if (hospital.Id == 0 || hospital2.Id == 0 || hospital3.Id == 0 || hospital4.Id == 0)
-    {
-        context.Hospitals.AddRange(
-            hospital.Id == 0 ? hospital : null,
-            hospital2.Id == 0 ? hospital2 : null,
-            hospital3.Id == 0 ? hospital3 : null,
-            hospital4.Id == 0 ? hospital4 : null
-        );
-        context.SaveChanges();
-    }
-
-    // Admins
-    if (!context.Admins.Any(a => a.Email == "alice@example.com"))
-    {
-        context.Admins.Add(new Admin
-        {
-            FirstName = "Alice",
-            LastName = "Smith",
-            Email = "alice@example.com",
-            Password = "password",
-            Age = 35,
-            HospitalId = hospital.Id
-        });
-    }
-
-    if (!context.Admins.Any(a => a.Email == "john@example.com"))
-    {
-        context.Admins.Add(new Admin
-        {
-            FirstName = "John",
-            LastName = "Doe",
-            Email = "john@example.com",
-            Password = "password",
-            Age = 43,
-            HospitalId = hospital2.Id
-        });
-    }
-
-    if (!context.Admins.Any(a => a.Email == "jane@example.com"))
-    {
-        context.Admins.Add(new Admin
-        {
-            FirstName = "Jane",
-            LastName = "Doe",
-            Email = "jane@example.com",
-            Password = "password",
-            Age = 25,
-            HospitalId = hospital3.Id
-        });
-    }
-
-    if (!context.Admins.Any(a => a.Email == "ronald@example.com"))
-    {
-        context.Admins.Add(new Admin
-        {
-            FirstName = "Ronald",
-            LastName = "Donald",
-            Email = "ronald@example.com",
-            Password = "password",
-            Age = 50,
-            HospitalId = hospital4.Id
-        });
-    }
-
-    // Doctors
-    if (!context.Doctors.Any(d => d.Email == "harold@example.com"))
-    {
-        context.Doctors.Add(new Doctor
-        {
-            FirstName = "Harold",
-            LastName = "John",
-            Email = "harold@example.com",
-            Password = "password",
-            Age = 28,
-            HospitalId = hospital.Id
-        });
-    }
-
-    if (!context.Doctors.Any(d => d.Email == "alex@example.com"))
-    {
-        context.Doctors.Add(new Doctor
-        {
-            FirstName = "Alex",
-            LastName = "Jones",
-            Email = "alex@example.com",
-            Password = "password",
-            Age = 30,
-            HospitalId = hospital2.Id
-        });
-    }
-
-    if (!context.Doctors.Any(d => d.Email == "joe@example.com"))
-    {
-        context.Doctors.Add(new Doctor
-        {
-            FirstName = "Joe",
-            LastName = "Jones",
-            Email = "joe@example.com",
-            Password = "password",
-            Age = 45,
-            HospitalId = hospital3.Id
-        });
-    }
-
-    if (!context.Doctors.Any(d => d.Email == "johnny@example.com"))
-    {
-        context.Doctors.Add(new Doctor
-        {
-            FirstName = "Johnny",
-            LastName = "Guitar",
-            Email = "johnny@example.com",
-            Password = "password",
-            Age = 32,
-            HospitalId = hospital4.Id
-        });
-    }
-
-    // Patients
-    if (!context.Patients.Any(p => p.Email == "jay@example.com"))
-    {
-        context.Patients.Add(new Patient
-        {
-            FirstName = "Jay",
-            LastName = "Jackson",
-            Email = "jay@example.com",
-            Password = "password",
-            Age = 28,
-            HospitalId = hospital.Id
-        });
-    }
-
-    if (!context.Patients.Any(p => p.Email == "steve@example.com"))
-    {
-        context.Patients.Add(new Patient
-        {
-            FirstName = "Steve",
-            LastName = "Hoover",
-            Email = "steve@example.com",
-            Password = "password",
-            Age = 27,
-            HospitalId = hospital2.Id
-        });
-    }
-
-    if (!context.Patients.Any(p => p.Email == "jenny@example.com"))
-    {
-        context.Patients.Add(new Patient
-        {
-            FirstName = "Jenny",
-            LastName = "Mcgee",
-            Email = "jenny@example.com",
-            Password = "password",
-            Age = 33,
-            HospitalId = hospital3.Id
-        });
-    }
-
-    if (!context.Patients.Any(p => p.Email == "jake@example.com"))
-    {
-        context.Patients.Add(new Patient
-        {
-            FirstName = "Jake",
-            LastName = "Sanders",
-            Email = "jake@example.com",
-            Password = "password",
-            Age = 38,
-            HospitalId = hospital4.Id
-        });
-    }
-
-    context.SaveChanges();
-}
 
 // Middleware setup
 app.UseRouting();
