@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BlazorApp.Models.Entities;
 
-[Table("user_account")]
+[Table("UserAccount")]
 
-public class User_Account
+public class UserAccount
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
