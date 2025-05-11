@@ -10,7 +10,6 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<AppointmentService>();
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient(); 
-builder.Services.AddAuthorizationCore();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -20,7 +19,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.Name = "auth_token";
         options.LoginPath = "/Login";
         options.LogoutPath = "/Login";
+        options.Cookie.MaxAge = TimeSpan.FromMinutes(30);
+        options.AccessDeniedPath = "/access-denied";
     });
+builder.Services.AddAuthorizationCore();
+builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
