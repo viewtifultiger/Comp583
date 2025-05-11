@@ -1,7 +1,7 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace BlazorApp.Models.Entities.ViewModels
+namespace BlazorApp.Models.ViewModels
 {
     public class LoginViewModel
     {

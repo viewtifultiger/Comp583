@@ -1,9 +1,17 @@
 using Microsoft.EntityFrameworkCore;
-using BlazorApp.Models;
+using BlazorApp.Models.Entities;
+
+namespace BlazorApp.Data;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+
+    }
+
+    public DbSet<UserAccount> UserAccounts { get; set; }
+
 
     public DbSet<Admin> Admins { get; set; }
     public DbSet<Doctor> Doctors { get; set; }
