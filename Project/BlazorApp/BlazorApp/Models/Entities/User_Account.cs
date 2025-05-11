@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BlazorApp.Models.Entities;
 
-[Table("user_accoutn")]
+[Table("user_account")]
 
 public class User_Account
 {
