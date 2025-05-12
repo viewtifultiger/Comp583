@@ -4,10 +4,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using BlazorApp.Models;
 using BCrypt.Net;
+using BlazorApp.Data;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddSingleton<AppointmentService>();
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient(); 
 builder.Services.AddRazorComponents()
@@ -28,25 +27,14 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
-
-
-// Middleware setup
-app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
-}
-else
-{
-    app.UseDeveloperExceptionPage();
 }
 
 app.UseHttpsRedirection();
@@ -55,7 +43,7 @@ app.UseAntiforgery();
 app.MapRazorPages();
 app.MapStaticAssets();
 app.MapGet("/", () => Results.Redirect("/Login"));
-app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();
-

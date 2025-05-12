@@ -3,9 +3,8 @@
 @using BlazorApp.Data
 @using BlazorApp.Models.ViewModels
 @using System.Security.Claims
-@using Microsoft.AspNetCore.Authentication
-@using Microsoft.AspNetCore.Authentication.Cookies
-@using Microsoft.AspNetCore.Components;
+
+
 @inject AppDbContext appDbContext
 @inject NavigationManager navigationManager
 
@@ -14,7 +13,7 @@
 		<EditForm Model="@Model" OnValidSubmit="Authenticate" FormName="LoginForm">
 			<DataAnnotationsValidator />
 			<div class="mb-3 text-center flex-column">
-				@* <img src="/images/avatar.png" style="max-height:5rem;" /> *@
+				<img src="/images/avatar.jpg" style="max-height:5rem;" />
 				<h3>LOGIN</h3>
 			</div>
 			<div class="mb-3">
