@@ -1,0 +1,96 @@
+@page "/AddTimes"
+@inject NavigationManager NavigationManager
+@inject AppDbContext DbContext
+@inject IHttpContextAccessor HttpContextAccessor
+@using BlazorApp.Models
+@using Microsoft.EntityFrameworkCore
+@rendermode InteractiveServer
+
+<h3>Doctor Availability Times</h3>
+
+<!-- Doctor Selection -->
+<select class="form-select" @onchange="OnDoctorSelected">
+    <option value="">-- Select Doctor --</option>
+    @foreach (var doctor in AllDoctors)
+    {
+        <option value="@doctor.Email">@doctor.FirstName @doctor.LastName (@doctor.Email)</option>
+    }
+</select>
+
+@if (SelectedDoctor != null)
+{
+    <div class="mt-4">
+        <h5>Add Availability for @SelectedDoctor.FirstName @SelectedDoctor.LastName</h5>
+        
+        <label>Date:</label>
+        <InputDate class="form-control" @bind-Value="NewAvailabilityDate" />
+
+        <label>Time:</label>
+        <input class="form-control" @bind="NewAvailabilityTime" placeholder="e.g. 09:00 AM" />
+
+        <button class="btn btn-success mt-2" @onclick="AddAvailability">Add Availability</button>
+    </div>
+}
+
+@code {
+    private string? SelectedDoctorEmail;
+    private List<DoctorEntry> AllDoctors = new();
+    private Doctor? SelectedDoctor; // Now only selecting a Doctor entity
+
+    private DateTime NewAvailabilityDate = DateTime.Today;
+    private string NewAvailabilityTime = "";
+
+    public class DoctorEntry
+    {
+        public string Email { get; set; } = "";
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only fetch Doctors from the database
+        AllDoctors = await DbContext.Doctors
+            .Select(d => new DoctorEntry
+            {
+                Email = d.Email,
+                FirstName = d.FirstName,
+                LastName = d.LastName
+            })
+            .ToListAsync();
+    }
+
+    private async Task OnDoctorSelected(ChangeEventArgs e)
+    {
+        SelectedDoctorEmail = e.Value?.ToString();
+        await LoadSelectedDoctor();
+    }
+
+    private async Task LoadSelectedDoctor()
+    {
+        // Fetch the selected doctor using their email
+        SelectedDoctor = await DbContext.Doctors
+            .FirstOrDefaultAsync(d => d.Email == SelectedDoctorEmail);
+    }
+
+    private async Task AddAvailability()
+    {
+        if (SelectedDoctor != null)
+        {
+            // Add new availability for the selected doctor
+            DbContext.Availabilities.Add(new Availability
+            {
+                DoctorId = SelectedDoctor.Id,
+                Date = NewAvailabilityDate,
+                TimeSlot = NewAvailabilityTime,
+                IsAvailable = true
+            });
+
+            await DbContext.SaveChangesAsync();
+        }
+    }
+}
+
+
+
+

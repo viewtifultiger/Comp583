@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlazorApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250513024051_AddUserBaseClass")]
+    partial class AddUserBaseClass
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -20,43 +23,6 @@ namespace BlazorApp.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("BlazorApp.Models.Admin", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Age")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("HospitalId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HospitalId");
-
-                    b.ToTable("Admins");
-                });
 
             modelBuilder.Entity("BlazorApp.Models.Appointment", b =>
                 {
@@ -136,43 +102,6 @@ namespace BlazorApp.Migrations
                     b.ToTable("Availabilities");
                 });
 
-            modelBuilder.Entity("BlazorApp.Models.Doctor", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Age")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("HospitalId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HospitalId");
-
-                    b.ToTable("Doctors");
-                });
-
             modelBuilder.Entity("BlazorApp.Models.Hospital", b =>
                 {
                     b.Property<int>("Id")
@@ -188,43 +117,6 @@ namespace BlazorApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Hospitals");
-                });
-
-            modelBuilder.Entity("BlazorApp.Models.Patient", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Age")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("HospitalId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HospitalId");
-
-                    b.ToTable("Patients");
                 });
 
             modelBuilder.Entity("BlazorApp.Models.Time", b =>
@@ -260,6 +152,11 @@ namespace BlazorApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -283,17 +180,73 @@ namespace BlazorApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+
+                    b.HasDiscriminator().HasValue("User");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("BlazorApp.Models.Admin", b =>
                 {
-                    b.HasOne("BlazorApp.Models.Hospital", "Hospital")
-                        .WithMany("Admins")
-                        .HasForeignKey("HospitalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasBaseType("BlazorApp.Models.User");
 
-                    b.Navigation("Hospital");
+                    b.Property<int>("Age")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HospitalId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("HospitalId");
+
+                    b.ToTable("Users", t =>
+                        {
+                            t.Property("Age")
+                                .HasColumnName("Admin_Age");
+
+                            t.Property("HospitalId")
+                                .HasColumnName("Admin_HospitalId");
+                        });
+
+                    b.HasDiscriminator().HasValue("Admin");
+                });
+
+            modelBuilder.Entity("BlazorApp.Models.Doctor", b =>
+                {
+                    b.HasBaseType("BlazorApp.Models.User");
+
+                    b.Property<int>("Age")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HospitalId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("HospitalId");
+
+                    b.ToTable("Users", t =>
+                        {
+                            t.Property("Age")
+                                .HasColumnName("Doctor_Age");
+
+                            t.Property("HospitalId")
+                                .HasColumnName("Doctor_HospitalId");
+                        });
+
+                    b.HasDiscriminator().HasValue("Doctor");
+                });
+
+            modelBuilder.Entity("BlazorApp.Models.Patient", b =>
+                {
+                    b.HasBaseType("BlazorApp.Models.User");
+
+                    b.Property<int>("Age")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HospitalId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("HospitalId");
+
+                    b.HasDiscriminator().HasValue("Patient");
                 });
 
             modelBuilder.Entity("BlazorApp.Models.Appointment", b =>
@@ -346,6 +299,28 @@ namespace BlazorApp.Migrations
                     b.Navigation("Doctor");
                 });
 
+            modelBuilder.Entity("BlazorApp.Models.Time", b =>
+                {
+                    b.HasOne("BlazorApp.Models.Doctor", "Doctor")
+                        .WithMany("Times")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+                });
+
+            modelBuilder.Entity("BlazorApp.Models.Admin", b =>
+                {
+                    b.HasOne("BlazorApp.Models.Hospital", "Hospital")
+                        .WithMany("Admins")
+                        .HasForeignKey("HospitalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Hospital");
+                });
+
             modelBuilder.Entity("BlazorApp.Models.Doctor", b =>
                 {
                     b.HasOne("BlazorApp.Models.Hospital", "Hospital")
@@ -368,15 +343,13 @@ namespace BlazorApp.Migrations
                     b.Navigation("Hospital");
                 });
 
-            modelBuilder.Entity("BlazorApp.Models.Time", b =>
+            modelBuilder.Entity("BlazorApp.Models.Hospital", b =>
                 {
-                    b.HasOne("BlazorApp.Models.Doctor", "Doctor")
-                        .WithMany("Times")
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Admins");
 
-                    b.Navigation("Doctor");
+                    b.Navigation("Doctors");
+
+                    b.Navigation("Patients");
                 });
 
             modelBuilder.Entity("BlazorApp.Models.Admin", b =>
@@ -389,15 +362,6 @@ namespace BlazorApp.Migrations
                     b.Navigation("Appointments");
 
                     b.Navigation("Times");
-                });
-
-            modelBuilder.Entity("BlazorApp.Models.Hospital", b =>
-                {
-                    b.Navigation("Admins");
-
-                    b.Navigation("Doctors");
-
-                    b.Navigation("Patients");
                 });
 
             modelBuilder.Entity("BlazorApp.Models.Patient", b =>
