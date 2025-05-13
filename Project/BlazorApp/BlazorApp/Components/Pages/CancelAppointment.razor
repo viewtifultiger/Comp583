@@ -1,0 +1,110 @@
+@page "/CancelAppointment"
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+@inject AppDbContext Db
+@using BlazorApp.Models
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Cancel Appointment</PageTitle>
+
+<h1>Cancel Appointment</h1>
+
+<!-- Patient Dropdown -->
+<select @onchange="OnPatientChanged" class="form-control">
+    <option value="">Select Patient</option>
+    @foreach (var p in patients)
+    {
+        <option value="@p.Id">@p.FirstName @p.LastName</option>
+    }
+</select>
+<br />
+
+@if (appointments != null && appointments.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Doctor</th>
+                <th>Hospital</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var appt in appointments)
+            {
+                <tr>
+                    <td>@appt.Date.ToShortDateString()</td>
+                    <td>@appt.time</td> <!-- Assumes 'time' is a separate property in Appointment -->
+                    <td>@($"{appt.Doctor.FirstName} {appt.Doctor.LastName}")</td>
+                    <td>@appt.Hospital.Name</td>
+                    <td>
+                        <button class="btn btn-danger" @onclick="@(() => CancelAppointments(appt.Id))">Cancel</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (patientId.HasValue)
+{
+    <p>No appointments found for this patient.</p>
+}
+
+@code {
+    private int? patientId;
+    private List<Patient> patients = new();
+    private List<Appointment> appointments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        patients = await Db.Patients.ToListAsync();
+    }
+
+    private async Task OnPatientChanged(ChangeEventArgs e)
+    {
+        patientId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
+
+        if (patientId.HasValue)
+        {
+            appointments = await Db.Appointments
+                .Where(a => a.PatientId == patientId.Value)
+                .Include(a => a.Doctor)
+                .Include(a => a.Hospital)
+                .ToListAsync();
+        }
+        else
+        {
+            appointments.Clear();
+        }
+    }
+
+    private async Task CancelAppointments(int appointmentId)
+    {
+        var appointment = await Db.Appointments.FindAsync(appointmentId);
+        if (appointment != null)
+        {
+            Db.Appointments.Remove(appointment);
+
+            // Optional: Make associated time slot available again
+            var availability = await Db.Availabilities.FirstOrDefaultAsync(a =>
+                a.DoctorId == appointment.DoctorId &&
+                a.Date == appointment.Date &&
+                a.TimeSlot == appointment.time);
+
+            if (availability != null)
+            {
+                availability.IsAvailable = true;
+            }
+
+            await Db.SaveChangesAsync();
+            // Refresh the list
+            appointments = await Db.Appointments
+                .Where(a => a.PatientId == patientId)
+                .Include(a => a.Doctor)
+                .Include(a => a.Hospital)
+                .ToListAsync();
+        }
+    }
+}

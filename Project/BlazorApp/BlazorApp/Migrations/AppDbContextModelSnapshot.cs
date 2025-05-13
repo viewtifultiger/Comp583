@@ -87,6 +87,10 @@ namespace BlazorApp.Migrations
                     b.Property<int?>("PatientId1")
                         .HasColumnType("int");
 
+                    b.Property<string>("time")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AdminId");
@@ -102,6 +106,34 @@ namespace BlazorApp.Migrations
                     b.HasIndex("PatientId1");
 
                     b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("BlazorApp.Models.Availability", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TimeSlot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.ToTable("Availabilities");
                 });
 
             modelBuilder.Entity("BlazorApp.Models.Doctor", b =>
@@ -268,6 +300,17 @@ namespace BlazorApp.Migrations
                     b.Navigation("Hospital");
 
                     b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("BlazorApp.Models.Availability", b =>
+                {
+                    b.HasOne("BlazorApp.Models.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
                 });
 
             modelBuilder.Entity("BlazorApp.Models.Doctor", b =>

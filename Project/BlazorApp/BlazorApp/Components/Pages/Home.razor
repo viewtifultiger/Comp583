@@ -3,10 +3,16 @@
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
 @inject AppDbContext DbContext
+@inject HttpClient Http
+@inject IHttpClientFactory ClientFactory
 @using Microsoft.AspNetCore.Authorization
 @using System.Security.Claims
 @using BlazorApp.Models
-@using Microsoft.EntityFrameworkCore;
+@using Microsoft.EntityFrameworkCore
+@using System.Text.Json
+@using System.Net.Http
+@using System.Text
+
 
 <PageTitle>Home</PageTitle>
 
@@ -18,13 +24,30 @@
 }
 else
 {
-    <p>Loading user info...</p>
+    //<p>Loading user info...</p>
 }
 
 <button class="btn btn-primary" @onclick="GoToLoginPage">Logout</button>
 
+<h3>Login as a User (Dev Tool)</h3>
+
+<select class="form-select" @bind="SelectedUserEmail">
+    <option value="">-- Select User --</option>
+    @foreach (var user in AllUsers)
+    {
+        <option value="@user.Email">@user.Role - @user.FirstName @user.LastName (@user.Email)</option>
+    }
+</select>
+
+<button class="btn btn-success mt-2" @onclick="LoginAsSelectedUser" disabled="@string.IsNullOrEmpty(SelectedUserEmail)">
+    Login as Selected User
+</button>
+
 @code {
     private string? FullName;
+    private string? SelectedUserEmail;
+
+    private List<UserEntry> AllUsers = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -32,11 +55,10 @@ else
 
         if (user?.Identity?.IsAuthenticated == true)
         {
-            var email = user.FindFirst(ClaimTypes.Name)?.Value;
+            var email = user.FindFirst(ClaimTypes.Email)?.Value;
 
             if (!string.IsNullOrEmpty(email))
             {
-                // Check all user roles
                 var doctor = await DbContext.Doctors.FirstOrDefaultAsync(d => d.Email == email);
                 var patient = await DbContext.Patients.FirstOrDefaultAsync(p => p.Email == email);
                 var admin = await DbContext.Admins.FirstOrDefaultAsync(a => a.Email == email);
@@ -49,11 +71,75 @@ else
                     FullName = $"{admin.FirstName} {admin.LastName}";
             }
         }
+
+        var doctors = await DbContext.Doctors.Select(d => new UserEntry
+        {
+            Email = d.Email,
+            FirstName = d.FirstName,
+            LastName = d.LastName,
+            Role = "Doctor"
+        }).ToListAsync();
+
+        var patients = await DbContext.Patients.Select(p => new UserEntry
+        {
+            Email = p.Email,
+            FirstName = p.FirstName,
+            LastName = p.LastName,
+            Role = "Patient"
+        }).ToListAsync();
+
+        var admins = await DbContext.Admins.Select(a => new UserEntry
+        {
+            Email = a.Email,
+            FirstName = a.FirstName,
+            LastName = a.LastName,
+            Role = "Admin"
+        }).ToListAsync();
+
+        AllUsers = doctors.Concat(patients).Concat(admins)
+                      .OrderBy(u => u.Role)
+                      .ThenBy(u => u.LastName)
+                      .ToList();
+}
+
+    private async Task LoginAsSelectedUser()
+    {
+        if (!string.IsNullOrEmpty(SelectedUserEmail))
+        {
+            var client = ClientFactory.CreateClient("BlazorApp");
+
+            var content = new StringContent(JsonSerializer.Serialize(new
+            {
+                Email = SelectedUserEmail
+            }), Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync("api/DevLogin", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo("/Home", forceLoad: true);
+            }
+            else
+            {
+                Console.Error.WriteLine("Login failed: " + response.StatusCode);
+            }
+        }
     }
+
+
 
     private void GoToLoginPage()
     {
         NavigationManager.NavigateTo("/Login");
     }
+
+    public class UserEntry
+    {
+        public string Email { get; set; } = "";
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+        public string Role { get; set; } = "";
+    }
 }
+
 

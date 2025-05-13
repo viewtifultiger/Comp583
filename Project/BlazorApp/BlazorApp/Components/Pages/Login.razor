@@ -103,10 +103,10 @@
     };
 
     // Sign in the user
-    await HttpContextAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, properties);
+    //await HttpContextAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, properties);
 
     // After login, redirect to a secured page (e.g., dashboard)
-    Navigation.NavigateTo("/dashboard", forceLoad: true);
+    //Navigation.NavigateTo("/Home", forceLoad: true);
 }
 
 

@@ -1,38 +1,61 @@
 ﻿@page "/Appointments"
 @attribute [StreamRendering]
-@inject AppointmentService AppointmentService
+@inject AppDbContext Db
+@using BlazorApp.Models
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>Appointments</PageTitle>
 
 <h1>Appointments</h1>
 
-@if (AppointmentService.Appointments.Count == 0)
+@if (appointments == null)
+{
+    <p><em>Loading appointments...</em></p>
+}
+else if (!appointments.Any())
 {
     <p><em>No appointments yet...</em></p>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Hospital</th>
-                <th>Doctor</th>
-                <th>Date</th>
-                <th>Time</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var appointment in AppointmentService.Appointments)
-            {
+    <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    <td>@appointment.Patient.FirstName</td>
-                    <td>@appointment.Hospital.Name</td>
-                    <td>@($"{appointment.Doctor.FirstName} {appointment.Doctor.LastName}")</td>
-                    <td>@appointment.Date.ToShortDateString()</td>
-                    <td>@appointment.Date.ToShortTimeString()</td> <!-- You had no Time property -->
+                    <th>Name</th>
+                    <th>Hospital</th>
+                    <th>Doctor</th>
+                    <th>Date</th>
+                    <th>Time</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var appointment in appointments)
+                {
+                    <tr>
+                        <td>@appointment.Patient.FirstName</td>
+                        <td>@appointment.Hospital.Name</td>
+                        <td>@($"{appointment.Doctor.FirstName} {appointment.Doctor.LastName}")</td>
+                        <td>@appointment.Date.ToShortDateString()</td>
+                        <td>@appointment.time</td>
+                    </tr>
+                 }
+            </tbody>
+        </table>
+    </div>
 }
+
+@code {
+    private List<Appointment>? appointments;
+
+    protected override async Task OnInitializedAsync()
+    {
+        appointments = await Db.Appointments
+            .Include(a => a.Patient)
+            .Include(a => a.Hospital)
+            .Include(a => a.Doctor)
+            .ToListAsync();
+    }
+}
+
+

@@ -1,6 +1,6 @@
 using BlazorApp.Models;
 namespace BlazorApp.Models
-{   
+{  
     public class Appointment
 {
     public int Id { get; set; }
@@ -14,7 +14,9 @@ namespace BlazorApp.Models
     public Doctor Doctor { get; set; }  
     
     public DateTime Date { get; set; }  
+    public String time { get; set; }
 }
 }
+
 
 

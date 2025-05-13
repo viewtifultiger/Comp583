@@ -3,38 +3,69 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using BlazorApp.Models;
+using Server;
+using Server.Controllers;
 using BCrypt.Net;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<AppointmentService>();
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient();
 
+// Add Blazor Server components and interactive rendering
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddAuthorizationCore();
 
+// Authentication configuration
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Login";
-        options.LogoutPath = "/Login";
+        options.LoginPath = "/login";
+        options.LogoutPath = "/logout"; 
     });
 
+// Configure database context
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Add custom authentication state provider for Blazor
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddHttpContextAccessor();
 
-var app = builder.Build();
+// Configure HttpClient for API requests
+builder.Services.AddHttpClient("BlazorApp", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5113/"); // Ensure correct URL for API calls
+});
+builder.Services.AddAuthorization();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin() 
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+
+var app = builder.Build();
+app.UseCors();
+app.MapControllers();
+//app.MapGet("/login", () => "API is running.");
+
+// Database seeding logic
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.Migrate();
 
-    // Hospitals
+    // Seed Hospitals
     Hospital hospital = context.Hospitals.FirstOrDefault(h => h.Name == "Henry Mayo") ?? new Hospital { Name = "Henry Mayo" };
     Hospital hospital2 = context.Hospitals.FirstOrDefault(h => h.Name == "Providence") ?? new Hospital { Name = "Providence" };
     Hospital hospital3 = context.Hospitals.FirstOrDefault(h => h.Name == "UCLA Health") ?? new Hospital { Name = "UCLA Health" };
@@ -51,7 +82,7 @@ using (var scope = app.Services.CreateScope())
         context.SaveChanges();
     }
 
-    // Admins
+    // Seed Admins with hashed passwords
     if (!context.Admins.Any(a => a.Email == "alice@example.com"))
     {
         context.Admins.Add(new Admin
@@ -104,7 +135,7 @@ using (var scope = app.Services.CreateScope())
         });
     }
 
-    // Doctors
+    // Seed Doctors with hashed passwords
     if (!context.Doctors.Any(d => d.Email == "harold@example.com"))
     {
         context.Doctors.Add(new Doctor
@@ -157,7 +188,7 @@ using (var scope = app.Services.CreateScope())
         });
     }
 
-    // Patients
+    // Seed Patients with hashed passwords
     if (!context.Patients.Any(p => p.Email == "jay@example.com"))
     {
         context.Patients.Add(new Patient
@@ -220,7 +251,7 @@ app.UseAuthorization();
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 else
@@ -237,4 +268,3 @@ app.MapGet("/", () => Results.Redirect("/Login"));
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.Run();
-

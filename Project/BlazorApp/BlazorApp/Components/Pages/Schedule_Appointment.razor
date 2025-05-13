@@ -1,183 +1,194 @@
-﻿@page "/Schedule Appointment"
+﻿@page "/ScheduleAppointment"
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 @inject AppDbContext Db
 @inject AppointmentService AppointmentService
 @using BlazorApp.Models
-
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>Schedule Appointment</PageTitle>
 
 <h1>Schedule Appointment</h1>
 
-<input @bind="name" placeholder="Name" />
-<br />
-
-<!-- Hospital Dropdown -->
-<select value="hospital" @onchange="OnHospitalChanged">
-    <option value="">Select Hospital</option>
-    @foreach (var h in hospitals)
+<!-- Patient Dropdown -->
+<select @onchange="OnPatientChanged" class="form-control">
+    <option value="">Select Patient</option>
+    @foreach (var p in patients)
     {
-        <option value="@h">@h</option>
+        <option value="@p.Id">@p.FirstName @p.LastName</option>
     }
 </select>
-
 <br />
 
-<!-- Doctor Dropdown, dependent on selected hospital -->
-<select value="doctorName" @onchange="OnDoctorChanged">
+<!-- Auto-selected Hospital Display -->
+<input class="form-control" value="@selectedHospitalName" disabled placeholder="Hospital will auto-fill" />
+<br />
+
+<!-- Doctor Dropdown -->
+<select class="form-control" @onchange="OnDoctorChanged" value="@doctorId" disabled="@(!filteredDoctors.Any())">
     <option value="">Select Doctor</option>
-    @foreach (var doctor in filteredDoctors)
+    @foreach (var d in filteredDoctors)
     {
-        <option value="@doctor">@doctor</option>
+        <option value="@d.Id">@d.FirstName @d.LastName</option>
     }
 </select>
 
-<br />
+<!-- Date Dropdown with InputDate component -->
+<InputDate TValue="DateTime?" Value="date" ValueChanged="OnDateChanged" ValueExpression="() => date" class="form-control" Max="@MaxDate" Min="@MinDate" Disabled="@(!filteredDates.Any())" />
 
-<!-- Date Dropdown, dependent on selected doctor -->
-<select value="date" @onchange="OnDateChanged">
-    <option value="">Select Date</option>
-    @foreach (var availableDate in filteredDates)
-    {
-        <option value="@availableDate">@availableDate</option>
-    }
-</select>
-
-<br />
-
-<!-- Time Dropdown, dependent on selected date -->
-<select @bind="time">
+<!-- Time Dropdown -->
+<select @bind="time" class="form-control" disabled="@(!filteredTimes.Any())">
     <option value="">Select Time</option>
-    @foreach (var availableTime in filteredTimes)
+    @foreach (var t in filteredTimes)
     {
-        <option value="@availableTime">@availableTime</option>
+        <option value="@t">@t</option>
     }
 </select>
 <br />
 
-<button @onclick="ScheduleAppointment" disabled="@(!IsFormValid)">
+<button @onclick="ScheduleAppointment" disabled="@(!IsFormValid)" class="btn btn-primary">
     Schedule Appointment
 </button>
 
-
-
 @code {
-    private string name = "";
-    private string hospital = "";
-    private string doctorName = "";
-    private string date = "";
+    private int? patientId;
+    private int? hospitalId;
+    private int? doctorId;
+    private DateTime? date;
     private string time = "";
 
-    private List<string> hospitals = new List<string>
-    {
-        "Henry Mayo",
-        "Providence",
-        "UCLA Health",
-        "Kaiser Permanente",
-    };
+    private string selectedHospitalName = "";
 
-    // Example data for doctors, dates, and times for each hospital
-    private Dictionary<string, List<string>> doctorsByHospital = new Dictionary<string, List<string>>
-    {
-        { "Henry Mayo", new List<string> { "Dr. Smith", "Dr. Johnson" } },
-        { "Providence", new List<string> { "Dr. Brown", "Dr. Lee" } },
-        { "UCLA Health", new List<string> { "Dr. Davis", "Dr. Miller" } },
-        { "Kaiser Permanente", new List<string> { "Dr. Wilson", "Dr. Moore" } },
-    };
+    private List<Patient> patients = new();
+    private List<Doctor> filteredDoctors = new();
+    private List<DateTime> filteredDates = new();
+    private List<string> filteredTimes = new();
 
-    private Dictionary<string, List<string>> availableDatesByDoctor = new Dictionary<string, List<string>>
-    {
-        { "Dr. Smith", new List<string> { "2025-05-01", "2025-05-02" } },
-        { "Dr. Johnson", new List<string> { "2025-05-03", "2025-05-04" } },
-        { "Dr. Brown", new List<string> { "2025-05-05", "2025-05-06" } },
-        { "Dr. Lee", new List<string> { "2025-05-07", "2025-05-08" } },
-        { "Dr. Davis", new List<string> { "2025-05-09", "2025-05-10" } },
-        { "Dr. Miller", new List<string> { "2025-05-11", "2025-05-12" } },
-        { "Dr. Wilson", new List<string> { "2025-05-13", "2025-05-14" } },
-        { "Dr. Moore", new List<string> { "2025-05-15", "2025-05-16" } },
-    };
+    // For InputDate component, to restrict date selection.
+    private DateTime? MaxDate => filteredDates.Any() ? filteredDates.Max() : null;
+    private DateTime? MinDate => filteredDates.Any() ? filteredDates.Min() : null;
 
-    private Dictionary<string, List<string>> availableTimesByDate = new Dictionary<string, List<string>>
+    protected override async Task OnInitializedAsync()
     {
-        { "2025-05-01", new List<string> { "10:00 AM", "11:00 AM" } },
-        { "2025-05-02", new List<string> { "12:00 PM", "1:00 PM" } },
-        { "2025-05-03", new List<string> { "9:00 AM", "2:00 PM" } },
-        { "2025-05-04", new List<string> { "3:00 PM", "4:00 PM" } },
-        { "2025-05-05", new List<string> { "10:00 AM", "11:00 AM" } },
-        { "2025-05-06", new List<string> { "12:00 PM", "1:00 PM" } },
-        { "2025-05-07", new List<string> { "9:00 AM", "2:00 PM" } },
-        { "2025-05-08", new List<string> { "3:00 PM", "4:00 PM" } },
-        { "2025-05-09", new List<string> { "10:00 AM", "11:00 AM" } },
-        { "2025-05-10", new List<string> { "12:00 PM", "1:00 PM" } },
-        { "2025-05-11", new List<string> { "9:00 AM", "2:00 PM" } },
-        { "2025-05-12", new List<string> { "3:00 PM", "4:00 PM" } },
-        { "2025-05-13", new List<string> { "10:00 AM", "11:00 AM" } },
-        { "2025-05-14", new List<string> { "12:00 PM", "1:00 PM" } },
-        { "2025-05-15", new List<string> { "9:00 AM", "2:00 PM" } },
-        { "2025-05-16", new List<string> { "3:00 PM", "4:00 PM" } },
-        // Add similar entries for other dates
-    };
-
-    // Filtered data for dependent dropdowns
-    private List<string> filteredDoctors = new List<string>();
-    private List<string> filteredDates = new List<string>();
-    private List<string> filteredTimes = new List<string>();
-
-    // Handle hospital change
-    private void OnHospitalChanged(ChangeEventArgs e)
-    {
-        hospital = e.Value.ToString();
-        // Update doctors based on selected hospital
-        filteredDoctors = string.IsNullOrEmpty(hospital) ? new List<string>() : doctorsByHospital.GetValueOrDefault(hospital, new List<string>());
-        doctorName = ""; // Reset doctor selection
-        filteredDates.Clear(); // Reset dates
-        filteredTimes.Clear(); // Reset times
+        patients = await Db.Patients.Include(p => p.Hospital).ToListAsync();
     }
 
-    // Handle doctor change
-    private void OnDoctorChanged(ChangeEventArgs e)
+    private async Task OnPatientChanged(ChangeEventArgs e)
     {
-        doctorName = e.Value.ToString();
-        // Update available dates based on selected doctor
-        filteredDates = string.IsNullOrEmpty(doctorName) ? new List<string>() : availableDatesByDoctor.GetValueOrDefault(doctorName, new List<string>());
-        date = ""; // Reset date selection
-        filteredTimes.Clear(); // Reset times
+        patientId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
+
+        var patient = patients.FirstOrDefault(p => p.Id == patientId);
+
+        if (patient != null)
+        {
+            hospitalId = patient.HospitalId;
+            selectedHospitalName = patient.Hospital?.Name ?? "Unknown";
+            // Load doctors for this hospital
+            filteredDoctors = await Db.Doctors
+                .Where(d => d.HospitalId == hospitalId.Value)
+                .ToListAsync();
+        }
+        else
+        {
+            hospitalId = null;
+            selectedHospitalName = "";
+            filteredDoctors.Clear();
+        }
+
+        doctorId = null;
+        filteredDates.Clear();
+        filteredTimes.Clear();
     }
 
-    // Handle date change
-    private void OnDateChanged(ChangeEventArgs e)
+    private async Task OnDoctorChanged(ChangeEventArgs e)
     {
-        date = e.Value.ToString();
-        // Update available times based on selected date
-        filteredTimes = string.IsNullOrEmpty(date) ? new List<string>() : availableTimesByDate.GetValueOrDefault(date, new List<string>());
+        doctorId = int.TryParse(e.Value?.ToString(), out int id) ? id : null;
+
+        if (doctorId.HasValue)
+        {
+            var availableTimes = await Db.Times
+                .Where(t => t.DoctorId == doctorId.Value /* && t.IsAvailable */) // Uncomment if Time has IsAvailable
+                .ToListAsync();
+
+            filteredDates = availableTimes
+                .Select(t => DateTime.TryParse(t.Date, out var d) ? d.Date : (DateTime?)null)
+                .Where(d => d.HasValue)
+                .Select(d => d.Value)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList();
+        }
+        else
+        {
+            filteredDates.Clear();
+        }
+
+        date = null;
+        filteredTimes.Clear();
+        time = "";
     }
+
+
+    private async Task OnDateChanged(DateTime? newDate)
+    {
+        date = newDate;
+
+        if (doctorId.HasValue && date.HasValue)
+        {
+            var dateString = date.Value.ToString("yyyy-MM-dd");
+
+            filteredTimes = await Db.Times
+                .Where(t => t.DoctorId == doctorId.Value && t.Date == dateString)
+                .Select(t => t.T.ToString()) 
+                .Distinct()
+                .OrderBy(t => t)
+                .ToListAsync();
+        }
+        else
+        {
+            filteredTimes.Clear();
+        }
+
+        time = "";
+    }
+
+
+
     private bool IsFormValid =>
-    !string.IsNullOrWhiteSpace(name) &&
-    !string.IsNullOrWhiteSpace(hospital) &&
-    !string.IsNullOrWhiteSpace(doctorName) &&
-    !string.IsNullOrWhiteSpace(date) &&
-    !string.IsNullOrWhiteSpace(time);
+        patientId.HasValue &&
+        hospitalId.HasValue &&
+        doctorId.HasValue &&
+        date.HasValue &&
+        !string.IsNullOrWhiteSpace(time);
 
-private void ScheduleAppointment()
+    private async Task ScheduleAppointment()
 {
     var newAppointment = new Appointment
     {
-        //Patient = name, // Assigning name from the input
-        //Hospital = hospital, // Assigning selected hospital
-        //DoctorName = doctorName, // Assigning selected doctor
-        //Date = date, // Assigning selected date
-        //Time = time // Assigning selected time
+        PatientId = patientId.Value,
+        HospitalId = hospitalId.Value,
+        DoctorId = doctorId.Value,
+        Date = date.Value.Date, // Only the date part
+        time = time,            // Selected time from dropdown
     };
 
-    // Call the service to add the appointment
-    AppointmentService.AddAppointment(newAppointment);
+    Db.Appointments.Add(newAppointment);
 
-    // Optionally, redirect to the Appointments page
+    var availability = await Db.Availabilities
+        .FirstOrDefaultAsync(a => a.DoctorId == doctorId && a.Date == date && a.TimeSlot == time);
+
+    if (availability != null)
+    {
+        availability.IsAvailable = false;
+    }
+
+    await Db.SaveChangesAsync();
     NavigationManager.NavigateTo("/Appointments");
 }
 
 }
 
 
-}
+
+
+
