@@ -29,16 +29,24 @@
         <input class="form-control" @bind="NewAvailabilityTime" placeholder="e.g. 09:00 AM" />
 
         <button class="btn btn-success mt-2" @onclick="AddAvailability">Add Availability</button>
+
+        @if (!string.IsNullOrEmpty(FeedbackMessage))
+        {
+            <div class="alert alert-info mt-3">
+                @FeedbackMessage
+            </div>
+        }
     </div>
 }
 
 @code {
     private string? SelectedDoctorEmail;
     private List<DoctorEntry> AllDoctors = new();
-    private Doctor? SelectedDoctor; // Now only selecting a Doctor entity
+    private Doctor? SelectedDoctor;
 
     private DateTime NewAvailabilityDate = DateTime.Today;
     private string NewAvailabilityTime = "";
+    private string FeedbackMessage = "";
 
     public class DoctorEntry
     {
@@ -49,7 +57,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Only fetch Doctors from the database
         AllDoctors = await DbContext.Doctors
             .Select(d => new DoctorEntry
             {
@@ -68,28 +75,48 @@
 
     private async Task LoadSelectedDoctor()
     {
-        // Fetch the selected doctor using their email
         SelectedDoctor = await DbContext.Doctors
             .FirstOrDefaultAsync(d => d.Email == SelectedDoctorEmail);
     }
 
     private async Task AddAvailability()
     {
-        if (SelectedDoctor != null)
+        if (SelectedDoctor != null && !string.IsNullOrWhiteSpace(NewAvailabilityTime))
         {
-            // Add new availability for the selected doctor
+            var normalizedTime = NewAvailabilityTime.Trim().ToLower();
+
+            var existingAvailability = await DbContext.Availabilities
+                .FirstOrDefaultAsync(a =>
+                    a.DoctorId == SelectedDoctor.Id &&
+                    a.Date.Date == NewAvailabilityDate.Date &&
+                    a.TimeSlot.Trim().ToLower() == normalizedTime
+                );
+
+            if (existingAvailability != null)
+            {
+                FeedbackMessage = "This time slot is already taken.";
+                return;
+            }
+
             DbContext.Availabilities.Add(new Availability
             {
                 DoctorId = SelectedDoctor.Id,
                 Date = NewAvailabilityDate,
-                TimeSlot = NewAvailabilityTime,
+                TimeSlot = NewAvailabilityTime.Trim(),
                 IsAvailable = true
             });
 
             await DbContext.SaveChangesAsync();
+            FeedbackMessage = "Availability successfully added.";
+        }
+        else
+        {
+            FeedbackMessage = "Please enter a valid time.";
         }
     }
 }
+
+
 
 
 

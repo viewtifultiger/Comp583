@@ -97,7 +97,7 @@
             if (editingAppointment != null)
             {
                 editingAppointment.Date = value;
-                _ = LoadAvailableTimes(value); // Load new times
+                _ = LoadAvailableTimes(value); 
             }
         }
     }
@@ -111,7 +111,7 @@
 
             availableTimes = await Db.Times
                 .Where(t => t.DoctorId == doctorId && t.Date == dateString)
-                .Select(t => t.T.ToString()) // Assuming T is a TimeSpan or similar
+                .Select(t => t.T.ToString()) 
                 .Distinct()
                 .OrderBy(t => t)
                 .ToListAsync();

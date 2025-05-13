@@ -9,18 +9,17 @@ using BCrypt.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<AppointmentService>();
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient();
 
-// Add Blazor Server components and interactive rendering
+
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddAuthorizationCore();
 
-// Authentication configuration
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -28,18 +27,18 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LogoutPath = "/logout"; 
     });
 
-// Configure database context
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add custom authentication state provider for Blazor
+
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddHttpContextAccessor();
 
-// Configure HttpClient for API requests
+
 builder.Services.AddHttpClient("BlazorApp", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5113/"); // Ensure correct URL for API calls
+    client.BaseAddress = new Uri("http://localhost:5113/"); 
 });
 builder.Services.AddAuthorization();
 
@@ -57,15 +56,12 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 app.UseCors();
 app.MapControllers();
-//app.MapGet("/login", () => "API is running.");
 
-// Database seeding logic
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.Migrate();
 
-    // Seed Hospitals
     Hospital hospital = context.Hospitals.FirstOrDefault(h => h.Name == "Henry Mayo") ?? new Hospital { Name = "Henry Mayo" };
     Hospital hospital2 = context.Hospitals.FirstOrDefault(h => h.Name == "Providence") ?? new Hospital { Name = "Providence" };
     Hospital hospital3 = context.Hospitals.FirstOrDefault(h => h.Name == "UCLA Health") ?? new Hospital { Name = "UCLA Health" };
@@ -82,7 +78,6 @@ using (var scope = app.Services.CreateScope())
         context.SaveChanges();
     }
 
-    // Seed Admins with hashed passwords
     if (!context.Admins.Any(a => a.Email == "alice@example.com"))
     {
         context.Admins.Add(new Admin
@@ -135,7 +130,6 @@ using (var scope = app.Services.CreateScope())
         });
     }
 
-    // Seed Doctors with hashed passwords
     if (!context.Doctors.Any(d => d.Email == "harold@example.com"))
     {
         context.Doctors.Add(new Doctor
@@ -188,7 +182,6 @@ using (var scope = app.Services.CreateScope())
         });
     }
 
-    // Seed Patients with hashed passwords
     if (!context.Patients.Any(p => p.Email == "jay@example.com"))
     {
         context.Patients.Add(new Patient
@@ -244,7 +237,6 @@ using (var scope = app.Services.CreateScope())
     context.SaveChanges();
 }
 
-// Middleware setup
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

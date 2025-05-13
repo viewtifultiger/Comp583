@@ -63,8 +63,6 @@
     private List<Doctor> filteredDoctors = new();
     private List<DateTime> filteredDates = new();
     private List<string> filteredTimes = new();
-
-    // For InputDate component, to restrict date selection.
     private DateTime? MaxDate => filteredDates.Any() ? filteredDates.Max() : null;
     private DateTime? MinDate => filteredDates.Any() ? filteredDates.Min() : null;
 
@@ -83,7 +81,6 @@
         {
             hospitalId = patient.HospitalId;
             selectedHospitalName = patient.Hospital?.Name ?? "Unknown";
-            // Load doctors for this hospital
             filteredDoctors = await Db.Doctors
                 .Where(d => d.HospitalId == hospitalId.Value)
                 .ToListAsync();
@@ -107,7 +104,7 @@
         if (doctorId.HasValue)
         {
             var availableTimes = await Db.Times
-                .Where(t => t.DoctorId == doctorId.Value /* && t.IsAvailable */) // Uncomment if Time has IsAvailable
+                .Where(t => t.DoctorId == doctorId.Value )
                 .ToListAsync();
 
             filteredDates = availableTimes
@@ -168,8 +165,8 @@
         PatientId = patientId.Value,
         HospitalId = hospitalId.Value,
         DoctorId = doctorId.Value,
-        Date = date.Value.Date, // Only the date part
-        time = time,            // Selected time from dropdown
+        Date = date.Value.Date, 
+        time = time,            
     };
 
     Db.Appointments.Add(newAppointment);

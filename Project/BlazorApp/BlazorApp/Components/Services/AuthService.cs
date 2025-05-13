@@ -24,7 +24,6 @@ public class AuthService : IAuthService
         string dbPassword = null;
         string role = null;
 
-        // Look up user by email in each table
         var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => d.Email == email);
         if (doctor != null)
         {
@@ -54,8 +53,6 @@ public class AuthService : IAuthService
                 role = "Admin";
             }
         }
-
-        // Validate password
         if (user != null && BCrypt.Net.BCrypt.Verify(password, dbPassword))
         {
             var claims = new List<Claim>

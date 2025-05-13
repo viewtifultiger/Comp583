@@ -36,7 +36,7 @@
             {
                 <tr>
                     <td>@appt.Date.ToShortDateString()</td>
-                    <td>@appt.time</td> <!-- Assumes 'time' is a separate property in Appointment -->
+                    <td>@appt.time</td> 
                     <td>@($"{appt.Doctor.FirstName} {appt.Doctor.LastName}")</td>
                     <td>@appt.Hospital.Name</td>
                     <td>
@@ -87,7 +87,6 @@ else if (patientId.HasValue)
         {
             Db.Appointments.Remove(appointment);
 
-            // Optional: Make associated time slot available again
             var availability = await Db.Availabilities.FirstOrDefaultAsync(a =>
                 a.DoctorId == appointment.DoctorId &&
                 a.Date == appointment.Date &&
@@ -99,7 +98,6 @@ else if (patientId.HasValue)
             }
 
             await Db.SaveChangesAsync();
-            // Refresh the list
             appointments = await Db.Appointments
                 .Where(a => a.PatientId == patientId)
                 .Include(a => a.Doctor)

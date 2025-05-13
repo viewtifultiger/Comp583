@@ -16,13 +16,12 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
         return Task.FromResult(new AuthenticationState(user));
     }
 
-    // This method will trigger a state change when the user logs in or logs out.
     public void MarkUserAsAuthenticated(string username)
     {
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, username),
-            new Claim(ClaimTypes.Role, "User") // or customize with the role
+            new Claim(ClaimTypes.Role, "User") 
         };
         var identity = new ClaimsIdentity(claims, "apiauth");
         var user = new ClaimsPrincipal(identity);
