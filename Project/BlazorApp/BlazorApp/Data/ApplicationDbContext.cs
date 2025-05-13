@@ -11,8 +11,6 @@ public class AppDbContext : DbContext
     public DbSet<Hospital> Hospitals { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<Time> Times { get; set; }
-    public DbSet<User> Users { get; set; }
-
     public DbSet<Availability> Availabilities { get; set; }
 
 
