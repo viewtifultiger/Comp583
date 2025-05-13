@@ -1,0 +1,198 @@
+@page "/ModifyAppointment"
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+@inject AppDbContext Db
+@using BlazorApp.Models
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Modify Appointment</PageTitle>
+
+<h1>Modify Appointment</h1>
+
+<!-- Patient Dropdown -->
+<select @onchange="OnPatientChanged" class="form-control">
+    <option value="">Select Patient</option>
+    @foreach (var p in patients)
+    {
+        <option value="@p.Id">@p.FirstName @p.LastName</option>
+    }
+</select>
+<br />
+
+@if (appointments != null && appointments.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Doctor</th>
+                <th>Hospital</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var appt in appointments)
+            {
+                <tr>
+                    <td>@appt.Date.ToShortDateString()</td>
+                    <td>@appt.time</td>
+                    <td>@($"{appt.Doctor.FirstName} {appt.Doctor.LastName}")</td>
+                    <td>@appt.Hospital.Name</td>
+                    <td>
+                        <button class="btn btn-warning" @onclick="() => EditAppointment(appt)">Edit</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (editingAppointment != null)
+{
+    <h3>Edit Appointment</h3>
+    <div>
+        <!-- Date Picker -->
+        <label for="newDate">Select New Date:</label>
+        <InputDate TValue="DateTime"
+                   @bind-Value="AppointmentDate"
+                   class="form-control"
+                   id="newDate" />
+        <br />
+
+        <!-- Time Dropdown -->
+        <label for="newTime">Select New Time:</label>
+        <select @bind="editingAppointment.time" class="form-control" id="newTime">
+            <option value="">Select Time</option>
+            @foreach (var t in availableTimes)
+            {
+                <option value="@t">@t</option>
+            }
+        </select>
+        <br />
+
+        <!-- Save Button -->
+        <button class="btn btn-primary" @onclick="() => SaveChanges(editingAppointment)">Save Changes</button>
+        <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+    </div>
+}
+
+@code {
+    private Appointment editingAppointment;
+    private int? patientId;
+    private List<Patient> patients = new();
+    private List<Appointment> appointments = new();
+    private List<string> availableTimes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        patients = await Db.Patients.ToListAsync();
+    }
+
+    private DateTime AppointmentDate
+    {
+        get => editingAppointment?.Date ?? DateTime.Now;
+        set
+        {
+            if (editingAppointment != null)
+            {
+                editingAppointment.Date = value;
+                _ = LoadAvailableTimes(value); // Load new times
+            }
+        }
+    }
+
+    private async Task LoadAvailableTimes(DateTime date)
+    {
+        if (editingAppointment != null)
+        {
+            var doctorId = editingAppointment.DoctorId;
+            var dateString = date.ToString("yyyy-MM-dd");
+
+            availableTimes = await Db.Times
+                .Where(t => t.DoctorId == doctorId && t.Date == dateString)
+                .Select(t => t.T.ToString()) // Assuming T is a TimeSpan or similar
+                .Distinct()
+                .OrderBy(t => t)
+                .ToListAsync();
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnPatientChanged(ChangeEventArgs e)
+    {
+        patientId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
+
+        if (patientId.HasValue)
+        {
+            appointments = await Db.Appointments
+                .Where(a => a.PatientId == patientId.Value)
+                .Include(a => a.Doctor)
+                .Include(a => a.Hospital)
+                .ToListAsync();
+        }
+        else
+        {
+            appointments.Clear();
+        }
+    }
+
+    private void EditAppointment(Appointment appt)
+    {
+        editingAppointment = new Appointment
+        {
+            Id = appt.Id,
+            Date = appt.Date,
+            time = appt.time,
+            DoctorId = appt.DoctorId,
+            HospitalId = appt.HospitalId,
+            PatientId = appt.PatientId,
+            Doctor = appt.Doctor,
+            Hospital = appt.Hospital
+        };
+
+        _ = LoadAvailableTimes(appt.Date);
+    }
+
+    private async Task SaveChanges(Appointment updatedAppointment)
+    {
+        var appointment = await Db.Appointments.FindAsync(updatedAppointment.Id);
+        if (appointment != null)
+        {
+            appointment.Date = updatedAppointment.Date;
+            appointment.time = updatedAppointment.time;
+
+            // Mark selected time slot as unavailable
+            var availability = await Db.Availabilities
+                .FirstOrDefaultAsync(a =>
+                    a.DoctorId == appointment.DoctorId &&
+                    a.Date == appointment.Date &&
+                    a.TimeSlot == appointment.time);
+
+            if (availability != null)
+            {
+                availability.IsAvailable = false;
+            }
+
+            await Db.SaveChangesAsync();
+        }
+
+        editingAppointment = null;
+
+        appointments = await Db.Appointments
+            .Where(a => a.PatientId == patientId)
+            .Include(a => a.Doctor)
+            .Include(a => a.Hospital)
+            .ToListAsync();
+    }
+
+    private void CancelEdit()
+    {
+        editingAppointment = null;
+    }
+}
+
+
+
+

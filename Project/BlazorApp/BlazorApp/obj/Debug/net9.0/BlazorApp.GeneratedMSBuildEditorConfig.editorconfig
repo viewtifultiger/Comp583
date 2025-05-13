@@ -59,6 +59,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xMb2dpbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Michael/Documents/GitHub/Comp583/Project/BlazorApp/BlazorApp/Components/Pages/ModifyAppointment.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xNb2RpZnlBcHBvaW50bWVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Michael/Documents/GitHub/Comp583/Project/BlazorApp/BlazorApp/Components/Pages/Schedule_Appointment.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xTY2hlZHVsZV9BcHBvaW50bWVudC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

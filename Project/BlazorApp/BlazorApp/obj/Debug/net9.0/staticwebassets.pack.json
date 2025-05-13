@@ -141,10 +141,6 @@
       "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.min.css.map"
     },
     {
-      "Id": "C:\\Users\\Michael\\Documents\\GitHub\\Comp583\\Project\\BlazorApp\\BlazorApp\\wwwroot\\lib\\bootstrap\\dist\\js\\Login.js",
-      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\Login.js"
-    },
-    {
       "Id": "C:\\Users\\Michael\\Documents\\GitHub\\Comp583\\Project\\BlazorApp\\BlazorApp\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.js",
       "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.js"
     },
@@ -191,10 +187,6 @@
     {
       "Id": "C:\\Users\\Michael\\Documents\\GitHub\\Comp583\\Project\\BlazorApp\\BlazorApp\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.min.js.map",
       "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.min.js.map"
-    },
-    {
-      "Id": "C:\\Users\\Michael\\Documents\\GitHub\\Comp583\\Project\\BlazorApp\\BlazorApp\\wwwroot\\lib\\bootstrap\\dist\\js\\ogin.js",
-      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\ogin.js"
     },
     {
       "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.BlazorApp.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
